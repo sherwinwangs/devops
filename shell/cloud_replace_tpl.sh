@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# cloud_replace_tpl.sh -- replace a vm template
+# replace_tpl.sh -- replace a vm template
 # this script is used to replace a installed virtual machine template
 # Author : sherwin
 # Email: sherwinwangs@hotmail.com
