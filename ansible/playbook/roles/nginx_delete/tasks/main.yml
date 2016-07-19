@@ -1,0 +1,34 @@
+---
+- name: Stop nginx service
+  service: name=nginx state=stopped
+  ignore_errors: True
+
+- name: Remove source code
+  file: path=/opt/src/{{ item }} state=absent
+  with_items:
+    - yajl-2.1.0
+    - nginx-1.4.2
+    - nginx-tfs-master
+
+- name: Remove nginx install dir
+  file: path=/opt/server/nginx state=absent
+
+- name: Remove yajl library
+  file: path={{ item }} state=absent
+  with_items:
+    - /usr/local/lib/libyajl.so.2.1.0
+    - /usr/local/lib/libyajl.so.2
+    - /usr/local/lib/libyajl.so
+    - /usr/local/lib/libyajl_s.a
+    - /usr/local/include/yajl
+    - /usr/local/share/pkgconfig/yajl.pc
+    - /usr/local/bin/json_reformat
+    - /usr/local/bin/json_verify
+    - /usr/lib64/libyajl.so.2
+
+- name: Delete nginx from chkconfig
+  shell: chkconfig --del nginx
+  ignore_errors: True
+
+- name: Remove /etc/init.d/nginx
+  file: path=/etc/init.d/nginx state=absent

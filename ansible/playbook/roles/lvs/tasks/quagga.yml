@@ -1,0 +1,21 @@
+---
+- name: Install Quagga
+  yum: name={{ item }} state=installed
+  with_items:
+    - quagga
+
+- name: Create Quagga Configuration files
+  template: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: "ospfd.conf.j2", dest: "/etc/quagga/ospfd.conf"}
+  notify:
+    - restart network
+    - restart zebra
+    - restart ospfd
+
+- name: Start the zebra and ospfd service
+  service: name={{ item }} state=started enabled=yes
+  with_items:
+    - zebra
+    - ospfd
+

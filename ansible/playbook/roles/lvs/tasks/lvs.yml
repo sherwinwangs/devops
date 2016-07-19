@@ -1,0 +1,20 @@
+---
+- name: Install keepalived and ipvsadm
+  yum: name={{ item }} state=installed
+  with_items:
+    - keepalived
+    - ipvsadm
+
+- name: system parameters configuration
+  copy: src=sysctl.conf dest=/etc/sysctl.conf owner=root group=root mode=0644
+
+- name: take effect sysctl
+  shell: /sbin/sysctl -p >/dev/null
+
+- name: Create Keepalived configuration file
+  template: src=keepalived.conf.j2 dest=/etc/keepalived/keepalived.conf
+  notify:
+    - restart keepalived
+
+- name: Start the keepalived service
+  service: name=keepalived state=started enabled=yes

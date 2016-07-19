@@ -1,0 +1,10 @@
+---
+# Usage: 
+ - name: Delete Nginx
+   hosts: nginx1
+#  hosts: "{{ host }}"
+   remote_user: root
+   gather_facts: True
+
+   roles:
+     - nginx_delete

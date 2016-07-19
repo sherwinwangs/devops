@@ -1,0 +1,6 @@
+---
+# Variables here are applicable to all host groups
+
+nameserver1: 172.31.9.63
+nameserver2: 192.168.3.3
+ntpserver: cn.ntp.org.cn

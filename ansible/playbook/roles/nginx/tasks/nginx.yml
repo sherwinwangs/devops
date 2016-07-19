@@ -1,0 +1,39 @@
+---
+- name: Install required packages
+  yum: name={{ item }} state=installed
+  with_items:
+    - gcc
+    - gcc-c++
+    - autoconf
+    - make
+    - cmake
+    - pcre-devel
+    - openssl
+    - openssl-devel
+    - unzip
+    - tunctl
+
+- name: Unarchive source code
+  unarchive: src={{ item.src }} dest={{ item.dest}}
+  with_items:
+    - { src: "files/yajl-2.1.0.zip", dest: "/opt/src/"}
+    - { src: "files/nginx-1.4.2.zip", dest: "/opt/src/"}
+    - { src: "files/nginx-tfs-master.zip", dest: "/opt/src/"}
+
+- name: Install yajl as tfs module install required
+  shell: chdir=/opt/src/yajl-2.1.0 ./configure && make && make install && ln -s /usr/local/lib/libyajl.so.2 /usr/lib64/libyajl.so.2
+
+- name: Confiure make make install nginx
+  shell: chdir=/opt/src/nginx-1.4.2 ./configure --prefix=/opt/server/nginx --with-http_ssl_module --with-http_dav_module --with-http_flv_module --with-http_realip_module --with-http_gzip_static_module --with-http_stub_status_module --with-mail --with-mail_ssl_module --with-debug --http-client-body-temp-path=/opt/server/nginx/client --http-proxy-temp-path=/opt/server/nginx/proxy --http-fastcgi-temp-path=/opt/server/nginx/fastcgi --http-uwsgi-temp-path=/opt/server/nginx/uwsgi --http-scgi-temp-path=/opt/server/nginx/scgi --add-module=/opt/src/nginx-tfs-master && make -j{{ansible_processor_vcpus}} && make install
+
+- name: Create /etc/init.d/nginx
+  copy: src=files/nginx dest=/etc/init.d/nginx owner=root group=root mode=0755
+
+- name: Add nginx to chkconfig
+  shell: chkconfig --add nginx
+
+#- name: Create nginx configuration file
+#  template: src=nginx.j2 dest=/opt/server/nginx/conf/nginx.conf
+
+- name: Start the nginx service
+  service: name=nginx state=started enabled=yes

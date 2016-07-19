@@ -1,0 +1,7 @@
+vip1: 10.100.2.100
+vip2: 10.100.3.100
+vip3: 10.100.4.100
+listenport: 80
+iface: '{{ ansible_default_ipv4.interface }}'
+balance: rr
+weight: 10

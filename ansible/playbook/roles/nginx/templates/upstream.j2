@@ -1,0 +1,8 @@
+{% for group in groups tomcat %}
+upstream {{ group }} {
+ 	ip_hash;
+	{% for host in group %}
+	server group.host.ip:11002 weight=2 max_fails=2 fail_timeout=600s;
+	{% endof %}
+	}
+{% endfor %}

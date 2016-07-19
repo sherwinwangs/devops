@@ -1,0 +1,5 @@
+---
+# file: nginx.yml
+- hosts: all
+  roles:
+    - common

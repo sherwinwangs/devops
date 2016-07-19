@@ -1,0 +1,6 @@
+- name: Configure vip
+  template: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: "ifcfg-eth0:0.j2", dest: "/etc/sysconfig/network-scripts/ifcfg-eth0:0"}
+    - { src: "ifcfg-eth0:1.j2", dest: "/etc/sysconfig/network-scripts/ifcfg-eth0:1"}
+    - { src: "ifcfg-eth0:2.j2", dest: "/etc/sysconfig/network-scripts/ifcfg-eth0:2"}

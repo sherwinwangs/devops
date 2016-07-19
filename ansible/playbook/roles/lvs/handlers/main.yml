@@ -1,0 +1,16 @@
+---
+# Handlers for keepalived
+- name: restart keepalived
+  service: name=keepalived state=restarted
+
+- name: reload keepalived
+  service: name=keepalived state=reloaded
+
+- name: restart zebra
+  service: name=zebra state=restarted
+
+- name: restart ospfd
+  service: name=ospfd state=restarted
+
+- name: restart network
+  service: name=network state=restarted

@@ -1,0 +1,4 @@
+---
+# file: site.yml
+- include: common.yml
+- include: keepalived.yml

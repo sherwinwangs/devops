@@ -1,0 +1,9 @@
+---
+- name: Install nginx
+  hosts: nginx01
+  remote_user: root
+  gather_facts: true
+
+  roles:
+    - common
+    - nginx

@@ -1,0 +1,8 @@
+---
+- name: Install tomcat
+  hosts: nginx01
+  remote_user: root
+  gather_facts: true
+
+  roles:
+    - jdk

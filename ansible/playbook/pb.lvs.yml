@@ -1,0 +1,7 @@
+---
+# file: keepalived.yml
+- hosts: lvs
+  gather_facts: yes
+  roles:
+    - common
+    - lvs

@@ -1,0 +1,256 @@
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:          nginx
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: nginx init.d dash script for Redhat or other *nix.
+# Description:       nginx init.d dash script for Redhat or other *nix.
+### END INIT INFO
+
+#------------------------------------------------------------------------------
+#                               Consts
+#------------------------------------------------------------------------------
+
+prefix=/opt/server/nginx
+exec_prefix=${prefix}
+
+nginx_BIN=${exec_prefix}/sbin/nginx
+nginx_CONF=${prefix}/conf/nginx.conf
+nginx_PID=${prefix}/logs/nginx.pid
+
+#------------------------------------------------------------------------------
+#                               Simple Tests
+#------------------------------------------------------------------------------
+
+#test if nginx is a file and executable
+test -x $nginx_BIN || exit 0
+
+# Include nginx defaults if available
+if [ -f /etc/default/nginx ] ; then
+    . /etc/default/nginx
+fi
+
+#set exit condition
+#set -e
+
+#------------------------------------------------------------------------------
+#                               Functions
+#------------------------------------------------------------------------------
+
+setFilePerms(){
+    if [ -f $nginx_PID ]; then
+        chmod 400 $nginx_PID
+    fi
+}
+
+configtest() {
+    $nginx_BIN -t -c $nginx_CONF
+}
+
+#courtesy of php-fpm
+wait_for_pid () {
+    try=0
+
+    while test $try -lt 35 ; do
+        case "$1" in
+            'created')
+            if [ -f "$2" ] ; then
+                try=''
+                break
+            fi
+            ;;
+
+            'removed')
+            if [ ! -f "$2" ] ; then
+                try=''
+                break
+            fi
+            ;;
+        esac
+
+        try=`expr $try + 1`
+        sleep 1
+    done
+}
+
+status(){
+	if [ ! -r $nginx_PID ] ; then
+		echo "nginx is stopped"
+		exit 0
+	fi
+
+	PID=`cat $nginx_PID`
+	if ps -p $PID | grep -q $PID; then
+		echo "nginx (pid $PID) is running..."
+	else
+		echo "nginx dead but pid file exists"
+	fi
+}
+
+removePIDFile(){
+    if [ $1 ]; then
+        if [ -f $1 ]; then
+            rm -f $1
+        fi
+    else
+        #Do default removal
+        if [ -f nginx_PID ]; then
+            rm -f nginx_PID
+        fi
+    fi
+}
+
+start() {
+	echo -n "Starting nginx "
+
+	$nginx_BIN -c $nginx_CONF
+
+	if [ "$?" != 0 ] ; then
+		echo " failed"
+		exit 1
+	fi
+
+	wait_for_pid created $nginx_PID
+
+	if [ -n "$try" ] ; then
+		echo " failed"
+		exit 1
+	else
+		echo " done"
+	fi
+}
+
+stop() {
+	echo -n "Gracefully shutting down nginx "
+
+	if [ ! -r $nginx_PID ] ; then
+		echo "warning, no pid file found - nginx is not running ?"
+		exit 1
+	fi
+
+	kill -INT `cat $nginx_PID`
+
+	wait_for_pid removed $nginx_PID
+
+	if [ -n "$try" ] ; then
+		echo " failed. Use force-quit"
+		exit 1
+	else
+		echo " done"
+	fi
+}
+
+reload() {
+    echo -n "Reload service nginx"
+
+	if [ ! -r $nginx_PID ] ; then
+		echo "warning, no pid file found - nginx is not running ?"
+		exit 1
+	fi
+
+	kill -HUP `cat $nginx_PID`
+
+	echo " done"
+}
+
+quietupgrade() {
+    echo -n "Peforming Quiet Upgrade nginx"
+
+	if [ ! -r $nginx_PID ] ; then
+		echo "warning, no pid file found - nginx is not running ?"
+		exit 1
+	fi
+
+	kill -USR2 `cat nginx_PID`
+	kill -WINCH `cat nginx_PID.oldbin`
+
+	if [ ! -r $nginx_PID ] ; then
+		kill -QUIT `cat nginx_PID.oldbin`
+		wait_for_pid removed nginx_PID.oldbin
+		removePIDFile nginx_PID.oldbin
+
+		echo " done"
+	else
+		echo " failed"
+		exit 1
+
+		echo -n "ERROR! Reverting back to original nginx"
+
+		kill -HUP `cat nginx_PID`
+		kill -TERM `cat nginx_PID.oldbin`
+		kill -QUIT `cat nginx_PID.oldbin`
+
+		wait_for_pid removed nginx_PID.oldbin
+		removePIDFile nginx_PID.oldbin
+
+		echo " done"
+	fi
+}
+
+terminate() {
+    echo -n "Force terminating (via KILL) nginx"
+
+	if [ ! -r $nginx_PID ] ; then
+		echo "warning, no pid file found - nginx is not running ?"
+		exit 1
+	fi
+
+	kill -TERM `cat $nginx_PID`
+
+	wait_for_pid removed $nginx_PID
+
+	if [ -n "$try" ] ; then
+		echo " failed"
+		exit 1
+	else
+		echo " done"
+	fi
+}
+
+destroy() {
+    echo -n "Force terminating and may include self (via KILLALL) nginx"
+    killall nginx -q >> /dev/null 2>&1
+    echo " done"
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+	force-quit)
+		terminate
+		;;
+    restart)
+        stop
+        sleep 1
+        start
+        ;;
+    reload)
+        $1
+        ;;
+    status)
+        status
+        ;;
+    configtest)
+        $1
+        ;;
+    quietupgrade)
+        $1
+        ;;
+    destroy)
+        $1
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|force-quit|restart|reload|status|configtest|quietupgrade|destroy}"
+        echo "       The 'destroy' command should only be used as a last resort." 
+        exit 1
+        ;;
+esac
+
+exit 0

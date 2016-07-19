@@ -1,0 +1,5 @@
+---
+- name: Extract java7
+  unarchive: src=files/jdk17.zip dest=/usr/local/ copy=yes
+- name: config profile
+  copy: src=files/profile dest=/etc/profile owner=root group=root mode=0644

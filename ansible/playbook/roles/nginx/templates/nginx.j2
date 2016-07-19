@@ -1,0 +1,52 @@
+#{{ ansible_managed }}
+user              {{ nginx_user }}  {{ nginx_group }};
+worker_processes  {{ nginx_worker_processes }};
+
+events {
+{% for v in nginx_events_params %}
+        {{ v }};
+	{% endfor %}
+	}
+
+http {
+{% for v in nginx_http_params %}
+        {{ v }}
+{% endfor %}
+         
+#    include ./upstream.conf;
+#    include ./img1.zgxcw.com.conf;
+#    include ./zgxcw.cn.conf/*conf;
+#    include ./zgxcw.com.conf/*conf;
+#     include ./www.zgxcw.cn.conf;
+#    include ./weihu.conf/*conf;
+#    include ./done_zgxcw.com.conf/*conf;
+#     include ./zgxcw.com.cn.conf/*conf;
+    server {
+        listen 80     default_server;
+        access_log    logs/default_server.log   access ;
+        error_log     logs/default_server_error.log;
+        location / {
+          root   /opt/server/nginx/html;
+#          root   /opt/server/weihu;
+          index  index.html index.htm;
+#	   rewrite ^(.*)$ http://www.zgxcw.com permanent; 
+        }
+        error_page  404 500 502 503 504  /50x.html;
+        location = /50x.html {
+#            root   html;
+          root   /opt/server/weihu;
+        }
+    }
+    server {
+        listen       80;
+        server_name  127.0.0.1;
+	access_log off;  
+	error_log off;  
+	location /ngstat {  
+		stub_status on;  
+		access_log off;  
+		allow 127.0.0.1;   
+		deny all;  
+		} 	
+    }
+}

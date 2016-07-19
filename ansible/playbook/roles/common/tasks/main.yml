@@ -1,0 +1,15 @@
+---
+# file: roles/common/tasks/main.yml
+
+- name: rmdir /etc/yum.repos.d
+  file: dest=/etc/yum.repos.d state=absent
+- name: mkdir /etc/yum.repos.d
+  file: dest=/etc/yum.repos.d state=directory owner=root group=root mode=0755
+- name: CentOS-Base.repo
+  copy: src=CentOS6-Base-zgtx.repo dest=/etc/yum.repos.d/CentOS6-Base-zgtx.repo owner=root group=root mode=0644
+- name: CentOS-epel.repo
+  copy: src=epel.repo dest=/etc/yum.repos.d/epel.repo owner=root group=root mode=0644
+- name: Create source code dir
+  file: path=/opt/src state=directory mode=0755
+- name: Create server dir
+  file: path=/opt/server/logs state=directory mode=0755
